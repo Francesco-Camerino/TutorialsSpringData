@@ -1,4 +1,4 @@
-package oracle.cloud.exprivia.tutorial.model;
+package oracle.cloud.exprivia.tutorial.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;

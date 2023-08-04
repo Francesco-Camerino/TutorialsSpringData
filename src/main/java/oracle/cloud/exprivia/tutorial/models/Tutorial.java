@@ -1,4 +1,4 @@
-package oracle.cloud.exprivia.tutorial.model;
+package oracle.cloud.exprivia.tutorial.models;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
