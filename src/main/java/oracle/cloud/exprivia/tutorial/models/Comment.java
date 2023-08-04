@@ -19,6 +19,12 @@ public class Comment {
     @JsonIgnore
     private Tutorial tutorial;
 
+    private Comment() {}
+    public Comment(String content, Tutorial tutorial) {
+        this.content = content;
+        this.tutorial = tutorial;
+    }
+
     public Long getId() {
         return id;
     }
@@ -33,5 +39,9 @@ public class Comment {
 
     public Tutorial getTutorial() {
         return tutorial;
+    }
+
+    public void setTutorial(Tutorial tutorial) {
+        this.tutorial = tutorial;
     }
 }
