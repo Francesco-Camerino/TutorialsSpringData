@@ -63,22 +63,41 @@ public class TutorialController {
         return new ResponseEntity<>(tutorial, HttpStatus.OK);
     }
 
-    @PostMapping(path="/tutorial")
-    public ResponseEntity<Tutorial> addTutorial (@RequestBody Tutorial tutorial) {
-
+    /**
+     * Aggiunge un nuovo tutorial utilizzando i dati forniti nel corpo della richiesta.
+     *
+     * @param tutorial Il tutorial da aggiungere, fornito nel corpo della richiesta.
+     * @return Un oggetto ResponseEntity contenente il tutorial appena creato e lo stato HTTP 201 Created.
+     */
+    @PostMapping(path = "/tutorial")
+    public ResponseEntity<Tutorial> addTutorial(@RequestBody Tutorial tutorial) {
+        log.info("Request POST /tutorial/");
+        // Esegue la validazione e ottiene i valori validati per titolo, descrizione e stato di pubblicazione
         String title = validaTitolo(tutorial.getTitle());
         String description = validaDescription(tutorial.getDescription());
         Boolean published = validaPublished(tutorial.getPublished());
 
-        Tutorial tutorialCreated = new Tutorial(title, description, published);
-        tutorialRepository.save(tutorialCreated);
+        // Crea il nuovo tutorial utilizzando i dati validati e lo salva nel repository
+        Tutorial tutorialCreated = tutorialRepository.save(new Tutorial(title, description, published));
+
+        // Restituisce un ResponseEntity con il tutorial appena creato e lo stato HTTP 201 Created
         return new ResponseEntity<>(tutorialCreated, HttpStatus.CREATED);
     }
 
-    // Metodo per aggiornare il tutorial
-    @PutMapping("/tutorials/{id}")
-    public ResponseEntity<Tutorial> updateTutorial(@PathVariable Long id, @RequestBody Tutorial tutorialDaAggiornare) {
-        Tutorial tutorial = tutorialRepository.findById(id).orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tutorial non trovato con id " + id));
+
+    /**
+     * API per la modifica di un tutorial. Occorre specificare in Path l'ID del tutorial
+     * e nel payload i valori dell'oggetto che andranno a modificare quello già
+     * presente sulla tabella.
+     * @param id    (Obbligatorio) ID del tutorial da modificare
+     * @param tutorialDaAggiornare  Oggetto {@link Tutorial}
+     * @return  un oggetto di tipo {@link Tutorial}
+     */
+    @PutMapping("/tutorial/{id}")
+    public ResponseEntity<Tutorial> updateTutorial(@PathVariable("id") Long id, @RequestBody Tutorial tutorialDaAggiornare) {
+        log.info("Request PUT /tutorial/" + id);
+        Tutorial tutorial = tutorialRepository.findById(id)
+                .orElseThrow( ()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tutorial non trovato con id " + id));
 
         String title = validaTitolo(tutorialDaAggiornare.getTitle());
         String description = validaDescription(tutorialDaAggiornare.getDescription());
@@ -94,12 +113,12 @@ public class TutorialController {
     }
 
     @DeleteMapping(path="/tutorial/{id}")
-    public ResponseEntity<HttpStatus> deleteTutorialById(@PathVariable Long id) {
+    public ResponseEntity<HttpStatus> deleteTutorialById(@PathVariable("id") Long id) {
         try {
             tutorialRepository.deleteById(id);
 
         } catch (IllegalArgumentException e) {
-            e.printStackTrace();
+            log.error("Errore durante la cancellazione del tutorial con ID: " + id, e);
         }
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
