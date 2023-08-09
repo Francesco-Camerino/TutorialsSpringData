@@ -143,6 +143,12 @@ public class TutorialController {
     public ResponseEntity<HttpStatus> deleteTutorialById(@PathVariable("id") Long id) {
         log.info("Request DELETE /tutorial/" + id);
 
+        // riga opzionale per controllare se un id esiste
+       /* if (!tutorialRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Not found Tutorial with id = " + id);
+        }*/
+
         try {
             tutorialRepository.deleteById(id);
 
