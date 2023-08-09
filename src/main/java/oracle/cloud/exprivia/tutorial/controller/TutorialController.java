@@ -49,6 +49,17 @@ public class TutorialController {
         return new ResponseEntity<>(tutorials, HttpStatus.OK);
     }
 
+    @GetMapping("/tutorials/getPublished")
+    public ResponseEntity<List<Tutorial>> findByPublished() {
+        List<Tutorial> tutorials = tutorialRepository.findByPublished(true);
+
+        if (tutorials.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
+
+        return new ResponseEntity<>(tutorials, HttpStatus.OK);
+    }
+
     /**
      * API per recuperare un tutorial a partire dal suo id
      * @param id    (Obbligatorio) ID del tutorial da recuperare
@@ -120,6 +131,13 @@ public class TutorialController {
         } catch (IllegalArgumentException e) {
             log.error("Errore durante la cancellazione del tutorial con ID: " + id, e);
         }
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @DeleteMapping("/tutorials")
+    public ResponseEntity<HttpStatus> deleteAllTutorials() {
+        tutorialRepository.deleteAll();
+
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
