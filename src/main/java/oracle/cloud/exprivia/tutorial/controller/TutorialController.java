@@ -14,6 +14,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+
+/**
+ * Controller per la gestione degli endpoint relativi ai tutorial.
+ */
 @RestController // This means that this class is a Controller
 @RequestMapping(path="/api") // This means URL's start with /api (after Application path)
 public class TutorialController {
@@ -31,7 +35,7 @@ public class TutorialController {
     @GetMapping("/tutorials")
     public ResponseEntity<List<Tutorial>> getAllTutorials(@RequestParam(required = false) String title) {
         List<Tutorial> tutorials;
-        log.info("GET /tutorials ");
+        log.info("GET /tutorials");
         if (title == null)
             // In questo caso assegno direttamente il risultato alla lista
             tutorials = tutorialRepository.findAll();
@@ -49,8 +53,14 @@ public class TutorialController {
         return new ResponseEntity<>(tutorials, HttpStatus.OK);
     }
 
+    /**
+     * Recupera tutti i tutorial pubblicati.
+     *
+     * @return Una lista di tutorial pubblicati, o uno stato HTTP 204 No Content se non ci sono tutorial pubblicati.
+     */
     @GetMapping("/tutorials/getPublished")
     public ResponseEntity<List<Tutorial>> findByPublished() {
+        log.info("Request GET /tutorials/getPublished");
         List<Tutorial> tutorials = tutorialRepository.findByPublished(true);
 
         if (tutorials.isEmpty()) {
@@ -123,8 +133,16 @@ public class TutorialController {
         return new ResponseEntity<>(tutorialRepository.save(tutorial),HttpStatus.OK);
     }
 
+    /**
+     * Cancella un tutorial utilizzando l'ID fornito.
+     *
+     * @param id (Obbligatorio) ID del tutorial da cancellare
+     * @return Uno stato HTTP che indica il risultato dell'operazione.
+     */
     @DeleteMapping(path="/tutorial/{id}")
     public ResponseEntity<HttpStatus> deleteTutorialById(@PathVariable("id") Long id) {
+        log.info("Request DELETE /tutorial/" + id);
+
         try {
             tutorialRepository.deleteById(id);
 
@@ -134,8 +152,14 @@ public class TutorialController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+    /**
+     * Cancella tutti i tutorial presenti.
+     *
+     * @return Uno stato HTTP che indica il risultato dell'operazione.
+     */
     @DeleteMapping("/tutorials")
     public ResponseEntity<HttpStatus> deleteAllTutorials() {
+        log.info("Request DELETE /tutorial/");
         tutorialRepository.deleteAll();
 
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
