@@ -1,19 +1,20 @@
 package oracle.cloud.exprivia.tutorial.controller;
 
 import oracle.cloud.exprivia.tutorial.model.Comment;
-import oracle.cloud.exprivia.tutorial.model.Tutorial;
 import oracle.cloud.exprivia.tutorial.repository.CommentRepository;
 import oracle.cloud.exprivia.tutorial.repository.TutorialRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.Optional;
 
-@Controller // This means that this class is a Controller
+@RestController // This means that this class is a Controller
 @RequestMapping(path="/api") // This means URL's start with /demo (after Application path)
 public class CommentController {
     @Autowired // This means to get the bean called userRepository
@@ -22,25 +23,82 @@ public class CommentController {
     @Autowired
     private TutorialRepository tutorialRepository;
 
-    @GetMapping(path="/tutorials/{id}/comments")
-    public ResponseEntity<Iterable<Comment>> findCommentsForATutorial(@PathVariable Long id) {
-        Tutorial tutorial = tutorialRepository.findById(id).orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tutorial non trovato"));
-        Iterable<Comment> comments = commentRepository.findByTutorial(tutorial);
+    Logger log = LoggerFactory.getLogger(CommentController.class);
+
+    @GetMapping(path="/tutorials/{tutorialId}/comments")
+    public ResponseEntity<Iterable<Comment>> findCommentsForATutorial(@PathVariable(value = "tutorialId") Long tutorialId) {
+        log.info("REQUEST POST /tutorials/" + tutorialId + "/comments");
+
+        if (!tutorialRepository.existsById(tutorialId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Not found Tutorial with id = " + tutorialId);
+        }
+        List<Comment> comments = commentRepository.findByTutorialId(tutorialId);
         return new ResponseEntity<>(comments, HttpStatus.OK);
     }
 
-    @PostMapping(path="/tutorials/{id}/comments") // Map ONLY POST Requests
-    public ResponseEntity<Comment> addCommentForATutorial (@PathVariable Long id, @RequestBody Comment comment) {
-        Tutorial tutorial = tutorialRepository.findById(id).orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tutorial non trovato"));
-        String content = Optional.ofNullable(comment.getContent()).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Content non trovato"));
-        Comment commentNuovo = new Comment(content,tutorial);
-        commentRepository.save(commentNuovo);
+    @GetMapping(path="/comment/{id}")
+    public ResponseEntity<Comment> findCommentById(@PathVariable(value = "id") Long id) {
+        log.info("Request GET /comment/" + id);
+
+        Comment commentTrovato = commentRepository.findById(id)
+                .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "Commento non trovato con id = " + id));
+        return new ResponseEntity<>(commentTrovato, HttpStatus.OK);
+    }
+
+    @PostMapping(path="/tutorials/{tutorialId}/comments")
+    public ResponseEntity<Comment> addCommentForATutorial (@PathVariable(value = "tutorialId") Long tutorialId,
+                                                           @RequestBody Comment commentRequest) {
+        log.info("REQUEST POST /tutorials/" + tutorialId + "/comments");
+
+        Comment commentNuovo = tutorialRepository.findById(tutorialId).map(t -> {
+           String content = Optional.ofNullable(commentRequest.getContent()).orElse("");
+            commentRequest.setTutorial(t);
+            commentRequest.setContent(content);
+            return commentRepository.save(commentRequest);
+        }).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tutorial non trovato con id = " + tutorialId));
+
         return new ResponseEntity<>(commentNuovo, HttpStatus.CREATED);
     }
 
-    @GetMapping(path="/comment/{id}")
-    public ResponseEntity<Comment> findCommentById(@PathVariable Long id) {
-        Comment commentTrovato = commentRepository.findById(id).orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "Commento non trovato"));
-        return new ResponseEntity<>(commentTrovato, HttpStatus.OK);
+    @PutMapping("/comment/{id}")
+    public ResponseEntity<Comment> updateComment(@PathVariable("id") Long id, @RequestBody Comment commentRequest) {
+        log.info("Request PUT /comment/" + id);
+
+        Comment commentDaAggiornare = commentRepository.findById(id)
+                .orElseThrow( ()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "Comment non trovato con id " + id));
+
+        String content = Optional.ofNullable(commentRequest.getContent()).orElse("");
+        commentDaAggiornare.setContent(content);
+
+        return new ResponseEntity<>(commentRepository.save(commentDaAggiornare),HttpStatus.OK);
     }
+
+    @DeleteMapping(path="/comment/{id}")
+    public ResponseEntity<HttpStatus> deleteCommentById(@PathVariable("id") Long id) {
+        log.info("Request DELETE /comment/" + id);
+
+        try {
+            commentRepository.deleteById(id);
+
+        } catch (IllegalArgumentException e) {
+            log.error("Errore durante la cancellazione del comment con ID: " + id, e);
+        }
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @DeleteMapping("/tutorials/{tutorialId}/comments")
+    public ResponseEntity<List<Comment>> deleteAllCommentsOfTutorial(@PathVariable(value = "tutorialId") Long tutorialId) {
+        log.info("REQUEST DELETE /tutorials/" + tutorialId + "/comments");
+
+        if (!tutorialRepository.existsById(tutorialId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Not found Tutorial with id = " + tutorialId);
+        }
+
+        // Spring data jpa riesce a capire che deve prendere il tutorial e di esso il suo id grazie alla relazione 1 a n che c'è fra Tutorial e Comment
+        commentRepository.deleteByTutorialId(tutorialId);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
 }
