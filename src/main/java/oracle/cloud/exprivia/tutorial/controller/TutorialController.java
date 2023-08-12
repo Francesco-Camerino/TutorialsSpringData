@@ -33,7 +33,7 @@ public class TutorialController {
      * @return una lista di {@link Tutorial}
      */
     @GetMapping("/tutorials")
-    public ResponseEntity<List<Tutorial>> getAllTutorials(@RequestParam(required = false) String title) {
+    public ResponseEntity<List<Tutorial>> getAllTutorials(@RequestParam(name = "title", required = false) String title) {
         List<Tutorial> tutorials;
         log.info("GET /tutorials");
         if (title == null)
