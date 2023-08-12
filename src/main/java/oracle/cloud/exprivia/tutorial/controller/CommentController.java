@@ -1,6 +1,7 @@
 package oracle.cloud.exprivia.tutorial.controller;
 
 import oracle.cloud.exprivia.tutorial.model.Comment;
+import oracle.cloud.exprivia.tutorial.model.Tutorial;
 import oracle.cloud.exprivia.tutorial.repository.CommentRepository;
 import oracle.cloud.exprivia.tutorial.repository.TutorialRepository;
 import org.slf4j.Logger;
@@ -11,9 +12,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Questa classe rappresenta il controller per la gestione delle operazioni CRUD sui commenti.
+ */
 @RestController // This means that this class is a Controller
 @RequestMapping(path="/api") // This means URL's start with /demo (after Application path)
 public class CommentController {
@@ -25,6 +30,13 @@ public class CommentController {
 
     Logger log = LoggerFactory.getLogger(CommentController.class);
 
+    /**
+     * Recupera tutti i commenti associati a un tutorial specificato.
+     *
+     * @param tutorialId L'ID del tutorial di cui recuperare i commenti.
+     * @return Una ResponseEntity contenente la lista dei commenti e lo stato HTTP OK.
+     * @throws ResponseStatusException Se il tutorial non viene trovato.
+     */
     @GetMapping(path="/tutorials/{tutorialId}/comments")
     public ResponseEntity<Iterable<Comment>> findCommentsForATutorial(@PathVariable(value = "tutorialId") Long tutorialId) {
         log.info("REQUEST POST /tutorials/" + tutorialId + "/comments");
@@ -37,6 +49,13 @@ public class CommentController {
         return new ResponseEntity<>(comments, HttpStatus.OK);
     }
 
+    /**
+     * Recupera un commento specificato per ID.
+     *
+     * @param id L'ID del commento da recuperare.
+     * @return Una ResponseEntity contenente il commento richiesto e lo stato HTTP OK.
+     * @throws ResponseStatusException Se il commento non viene trovato.
+     */
     @GetMapping(path="/comment/{id}")
     public ResponseEntity<Comment> findCommentById(@PathVariable(value = "id") Long id) {
         log.info("Request GET /comment/" + id);
@@ -46,6 +65,35 @@ public class CommentController {
         return new ResponseEntity<>(commentTrovato, HttpStatus.OK);
     }
 
+    /**
+     * Recupera una lista di commenti che contengono il contenuto specificato.
+     *
+     * @param content Il contenuto da cercare nei commenti.
+     * @return Una ResponseEntity contenente la lista dei commenti che contengono il contenuto
+     *         e lo stato HTTP OK, oppure uno stato HTTP NO_CONTENT se nessun commento è trovato.
+     */
+    @GetMapping(path="/comment/getByContent")
+    public ResponseEntity<List<Comment>> findByContentContaining(@RequestParam(name = "content") String content) {
+        log.info("Request GET /comment/getByContent" + content);
+
+        List<Comment> comments = new ArrayList<Comment>(commentRepository.findByContentContaining(content));
+
+        if (comments.isEmpty()) {
+            // Nessun contenuto da ritornare
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
+
+        return new ResponseEntity<>(comments, HttpStatus.OK);
+    }
+
+    /**
+     * Aggiunge un nuovo commento associato a un tutorial specificato.
+     *
+     * @param tutorialId     L'ID del tutorial a cui aggiungere il commento.
+     * @param commentRequest L'oggetto Comment contenente il nuovo commento.
+     * @return Una ResponseEntity contenente il nuovo commento aggiunto e lo stato HTTP CREATED.
+     * @throws ResponseStatusException Se il tutorial non viene trovato.
+     */
     @PostMapping(path="/tutorials/{tutorialId}/comments")
     public ResponseEntity<Comment> addCommentForATutorial (@PathVariable(value = "tutorialId") Long tutorialId,
                                                            @RequestBody Comment commentRequest) {
@@ -61,6 +109,14 @@ public class CommentController {
         return new ResponseEntity<>(commentNuovo, HttpStatus.CREATED);
     }
 
+    /**
+     * Aggiorna un commento specificato per ID.
+     *
+     * @param id              L'ID del commento da aggiornare.
+     * @param commentRequest L'oggetto Comment contenente il commento aggiornato.
+     * @return Una ResponseEntity contenente il commento aggiornato e lo stato HTTP OK.
+     * @throws ResponseStatusException Se il commento non viene trovato.
+     */
     @PutMapping("/comment/{id}")
     public ResponseEntity<Comment> updateComment(@PathVariable("id") Long id, @RequestBody Comment commentRequest) {
         log.info("Request PUT /comment/" + id);
@@ -74,6 +130,12 @@ public class CommentController {
         return new ResponseEntity<>(commentRepository.save(commentDaAggiornare),HttpStatus.OK);
     }
 
+    /**
+     * Elimina un commento specificato per ID.
+     *
+     * @param id L'ID del commento da eliminare.
+     * @return Una ResponseEntity con stato HTTP NO_CONTENT.
+     */
     @DeleteMapping(path="/comment/{id}")
     public ResponseEntity<HttpStatus> deleteCommentById(@PathVariable("id") Long id) {
         log.info("Request DELETE /comment/" + id);
@@ -87,6 +149,13 @@ public class CommentController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+    /**
+     * Elimina tutti i commenti associati a un tutorial specificato.
+     *
+     * @param tutorialId L'ID del tutorial di cui eliminare i commenti.
+     * @return Una ResponseEntity con stato HTTP NO_CONTENT.
+     * @throws ResponseStatusException Se il tutorial non viene trovato.
+     */
     @DeleteMapping("/tutorials/{tutorialId}/comments")
     public ResponseEntity<List<Comment>> deleteAllCommentsOfTutorial(@PathVariable(value = "tutorialId") Long tutorialId) {
         log.info("REQUEST DELETE /tutorials/" + tutorialId + "/comments");

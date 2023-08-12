@@ -11,6 +11,8 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 
     List<Comment> findByTutorialId(Long postId);
 
+    List<Comment> findByContentContaining(String content);
+
     @Transactional
     void deleteByTutorialId(Long tutorialId);
 }
