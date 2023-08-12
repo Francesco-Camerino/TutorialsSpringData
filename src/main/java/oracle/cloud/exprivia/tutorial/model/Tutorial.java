@@ -42,6 +42,13 @@ public class Tutorial {
 
     public Tutorial() {}
 
+    /**
+     * Costruttore per inizializzare un nuovo tutorial.
+     *
+     * @param title       Il titolo del tutorial.
+     * @param description La descrizione del tutorial.
+     * @param published   Lo stato di pubblicazione del tutorial.
+     */
     public Tutorial(String title, String description, Boolean published) {
         this.title = title;
         this.description = description;
@@ -120,6 +127,11 @@ public class Tutorial {
         return comments;
     }
 
+    /**
+     * Restituisce una rappresentazione testuale del tutorial.
+     *
+     * @return Una stringa che rappresenta il tutorial con ID, titolo, descrizione e stato di pubblicazione.
+     */
     @Override
     public String toString() {
         return "Tutorial [id=" + id + ", title=" + title + ", description=" + description + ", published=" + published + "]";
